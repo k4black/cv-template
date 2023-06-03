@@ -68,6 +68,7 @@
 
 %% new: update links style, keep color add iconed href command
 % use \href{<url>}{<text>} or \ihref[<icon>]{<url>}{<text>}
+\PassOptionsToPackage{hidelinks}{hyperref}
 \RequirePackage[hidelinks]{hyperref}
 \newcommand{\ihref}[3][\raisebox{0.08em}{\scriptsize{\faLink[regular]}}\normalsize]{\href{#2}{#1\hspace{-0.1em}#3}}
 \pagenumbering{arabic}
