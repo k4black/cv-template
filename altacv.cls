@@ -361,7 +361,7 @@
         \large\color{emphasis}#1\par %Title
         \normalsize
         \ifstrequal{#2}{}{\smallskip}{
-            \textbf{\color{accent}#2}\ifstrequal{#4}{}{}{\color{accent}\hspace{-0.45em},\hspace{0.3em}#4}% company + location line
+            \textbf{\color{accent}#2}\ifstrequal{#4}{}{}{\color{accent},\hspace{0.3em}#4}% company + location line
             \par % accent subtitle
         \smallskip}%
     }{%
