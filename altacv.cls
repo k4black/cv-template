@@ -33,6 +33,9 @@
 %% v1.3: load hyperref for clickable hyperlinks
 \newif\if@withhyper
 \DeclareOption{withhyper}{\@withhypertrue}
+%% new: Optional debug mode
+\newif\if@debug
+\DeclareOption{debug}{\@debugtrue}
 \ProcessOptions\relax
 
 \LoadClass{extarticle}
@@ -42,10 +45,42 @@
 \RequirePackage[a-1b]{pdfx}
 \RequirePackage{accsupp}
 \RequirePackage[margin=2cm]{geometry}
-\RequirePackage[fixed]{fontawesome5}
+\RequirePackage[fixed]{fontawesome5}  % http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
 \RequirePackage{ifxetex,ifluatex}
 \RequirePackage{scrlfile}
 \RequirePackage{xparse}
+
+%% new: for using \today
+\RequirePackage[en-US]{datetime2}
+
+%% new: Aux
+\RequirePackage{calc} % http://ctan.org/pkg/calc
+\RequirePackage{setspace}
+
+%% new: Debug mode pkg
+\if@debug
+    \RequirePackage{showframe}
+    \RequirePackage{longfbox}
+    \fboxset{padding=0pt,margin=0pt,baseline-skip=false,border-style=dashed}
+\else
+    \RequirePackage[noframe]{showframe}
+\fi%
+
+%% new: update links style, keep color add iconed href command
+% use \href{<url>}{<text>} or \ihref[<icon>]{<url>}{<text>}
+\RequirePackage[hidelinks]{hyperref}
+\newcommand{\ihref}[3][\raisebox{0.08em}{\scriptsize{\faLink[regular]}}\normalsize]{\href{#2}{#1\hspace{-0.1em}#3}}
+\pagenumbering{arabic}
+
+%% new: Footer with meta-info, setup footer to cover the full width
+\RequirePackage{fancyhdr}
+\setlength{\headwidth}{\textwidth}
+\addtolength{\headwidth}{0.73\marginparwidth}
+\pagestyle{fancy}
+\fancyhf{}
+%\fancyhfoffset{0em}
+\renewcommand{\headrulewidth}{0pt}  % Remove head rule
+\renewcommand{\footruleskip}{0.5cm}  % shift footer down
 
 %% v1.1.5: added for convenience
 \newif\ifxetexorluatex
@@ -96,6 +131,7 @@
 \colorlet{body}{black!80!white}
 \colorlet{name}{heading}
 \colorlet{tagline}{accent}
+\colorlet{light}{lightgray}  %% new: for tags and footer
 \newcommand{\itemmarker}{{\small\textbullet}}
 \newcommand{\ratingmarker}{\faCircle}
 
@@ -103,7 +139,7 @@
 \usetikzlibrary{arrows}
 \RequirePackage[skins]{tcolorbox}
 \RequirePackage[inline]{enumitem}
-\setlist{leftmargin=*,labelsep=0.5em,nosep,itemsep=0.25\baselineskip,after=\vspace{0.25\baselineskip}}
+\setlist{leftmargin=*,labelsep=0.5em,nosep,itemsep=0.2\baselineskip,after=\vskip0.25\baselineskip}
 \setlist[itemize]{label=\itemmarker}
 \RequirePackage{graphicx}
 \RequirePackage{trimclip}
@@ -196,11 +232,11 @@
 \NewInfoField{phone}{\faPhone}[tel:]
 \NewInfoField{homepage}{\faGlobe}[https://]
 \NewInfoField{twitter}{\faTwitter}[https://twitter.com/]
-\NewInfoField{linkedin}{\faLinkedin}[https://linkedin.com/in/]
+\NewInfoField{linkedin}{\faLinkedinIn}[https://linkedin.com/in/]
 \NewInfoField{github}{\faGithub}[https://github.com/]
 % v1.?? Use fontawesome5 for Orcid symbol
 \NewInfoField{orcid}{\faOrcid}[https://orcid.org/]
-\NewInfoField{location}{\faMapMarker}
+\NewInfoField{location}{\faMapMarker*}
 
 % v1.2: Support for multiple photos
 \newlength{\altacv@photos@width}
@@ -263,6 +299,14 @@
     \altacv@right@photos\par%
   \endgroup\medskip
 }
+%% new: Define a footer for CV
+% Usage \makecvfooter{<left>}{<center>}{<right>}
+\newcommand*{\makecvfooter}[3]{%
+  \fancyfoot{}  % clear all footer fields
+  \fancyfoot[L]{\small\color{light}\textit{#1}}
+  \fancyfoot[C]{\small\color{light}\textit{#2}}
+  \fancyfoot[R]{\small\color{light}\textit{#3}}
+}
 
 \renewenvironment{quote}{\color{accent}\itshape\large}{\par}
 
@@ -270,7 +314,7 @@
   \nointerlineskip\bigskip%  %% bugfix in v1.6.2
   \ifstrequal{#1}{}{}{\marginpar{\vspace*{\dimexpr1pt-\baselineskip}\raggedright\input{#1}}}%
   {\color{heading}\cvsectionfont\MakeUppercase{#2}}\\[-1ex]%
-  {\color{headingrule}\rule{\linewidth}{2pt}\par}\medskip
+  {\color{headingrule}\rule{\linewidth}{2pt}\par}%\medskip
 }
 
 \newcommand{\cvsubsection}[1]{%
@@ -278,16 +322,51 @@
   {\color{subheading}\cvsubsectionfont{#1}\par}\medskip
 }
 
+%% new: minipage box to limit width
+% usage \cvbox{<width percent>}{<content>}
+\newcommand{\cvbox}[2][\linewidth]{%
+\lfbox{\begin{minipage}[t]{#1}%
+    \vspace{0pt}% anchor for [t]
+    #2%
+\end{minipage}}%
+}
+
+%% new: split into 2 columns right and left aligned
+% usage \cvsplit[0.8]{left column content}{right column}
+\newcommand{\cvsplit}[4][0.8]{%
+    \noindent%
+    \cvbox[#1 \linewidth - 0.015 \linewidth]{\raggedright#2}%
+    \hspace{0.01 \linewidth}
+    \hfill
+    \cvbox[1\linewidth - #1\linewidth - 0.015\linewidth]{\raggedleft#3}%
+    \par%
+}
+
+
 % v1.1.4: fixes inconsistent font size
+%% new: update the layout of the cventry
+% \newcommand{\cvevent}[4]{%
+%   {\large\color{emphasis}#1\par}
+%   \smallskip\normalsize
+%   \ifstrequal{#2}{}{}{
+%   \textbf{\color{accent}#2}\par
+%   \smallskip}
+%   \ifstrequal{#3}{}{}{{\small\makebox[0.5\linewidth][l]{\faCalendar~#3}}}%
+%   \ifstrequal{#4}{}{}{{\small\makebox[0.5\linewidth][l]{\faMapMarker~#4}}}\par
+%   \medskip\normalsize
+% }
 \newcommand{\cvevent}[4]{%
-  {\large\color{emphasis}#1\par}
-  \smallskip\normalsize
-  \ifstrequal{#2}{}{}{
-  \textbf{\color{accent}#2}\par
-  \smallskip}
-  \ifstrequal{#3}{}{}{{\small\makebox[0.5\linewidth][l]{\faCalendar~#3}}}%
-  \ifstrequal{#4}{}{}{{\small\makebox[0.5\linewidth][l]{\faMapMarker~#4}}}\par
-  \medskip\normalsize
+    \cvsplit{%
+        \large\color{emphasis}#1\par %Title
+        \normalsize
+        \ifstrequal{#2}{}{\smallskip}{
+            \textbf{\color{accent}#2}\ifstrequal{#4}{}{}{\color{accent}\hspace{-0.45em},\hspace{0.3em}#4}% company + location line
+            \par % accent subtitle
+        \smallskip}%
+    }{%
+        \ifstrequal{#3}{}{}{\small\faCalendar[regular]\hspace{0.5em}#3}% date line
+    }%
+    \smallskip\normalsize
 }
 
 \newcommand{\cvachievement}[3]{%
@@ -296,6 +375,21 @@
   & #3
   \end{tabularx}%
   \smallskip
+}
+
+%% new: Tag command e.g. [Python] (colored with experience level)
+% usage: \cvtag[50]{tag-content} (0, 10, 20 ,30 ,40)
+% TODO: 0-5 score convert to gradient
+\newcommand{\cvsmalltagraw}[2][0]{%
+    \tikz[baseline]\node[anchor=base,draw=body!30,fill=accent!#1,rounded corners=1.2ex,inner xsep=0.6ex,inner ysep=0.6ex,text height=1.2ex,text depth=0.0ex,minimum height=1.2ex]{#2};
+}
+\newcommand{\cvsmalltag}[2][0]{%
+    \small\cvsmalltagraw[#1]{#2}\normalsize%
+}
+\newcommand{\cvsmalltagline}[1]{%
+%    \footnotesize{\foreach \n in {#1}{\cvsmalltagraw{\color{body!50}\n}}}\par
+    \footnotesize{\foreach \n in {#1}{\cvsmalltagraw{\color{light}\n}}}\par
+    % \tikz[baseline]\node[anchor=base,draw=body!30,rounded corners=0.8ex,inner xsep=0.1ex,inner ysep =0.4ex,text height=1.0ex,text depth=0.05ex,minimum height=1.20x]{\scriptsize#1};
 }
 
 \newcommand{\cvtag}[1]{%
