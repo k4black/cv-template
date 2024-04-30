@@ -384,7 +384,7 @@
             \par % accent subtitle
         \smallskip}%
     }{%
-        \ifstrequal{#3}{}{}{\small\cvLocationMarker[regular]\hspace{0.5em}#3}% date line
+        \ifstrequal{#3}{}{}{\small\cvDateMarker\hspace{0.5em}#3}% date line
     }%
     \smallskip\normalsize
 }
