@@ -319,6 +319,21 @@
   \fancyfoot[C]{\small\color{light}\textit{#2}}
   \fancyfoot[R]{\small\color{light}\textit{#3}}
 }
+%% new: Defile LLM Injection for CV
+% A tiny white text at the very bottom of the CV
+% Usage \makecvinjection{<text>}
+\if@debug
+  \definecolor{injectioncolor}{rgb}{1,0,0} % Red for debug
+\else
+  \definecolor{injectioncolor}{rgb}{1,1,1} % White for non-debug
+\fi%
+\newcommand*{\makecvinjection}[1]{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[align=left, text width=1.1\linewidth, anchor=north, color=injectioncolor] at (current page.north) [yshift=-0.1cm] {
+      \tiny\color{injectioncolor}\textit{#1}
+    };
+  \end{tikzpicture}
+}
 
 \renewenvironment{quote}{\color{accent}\itshape\large}{\par}
 
